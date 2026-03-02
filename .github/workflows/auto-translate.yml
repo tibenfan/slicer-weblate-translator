@@ -1,0 +1,40 @@
+name: Weblate Auto Translation
+
+on:
+  schedule:
+    # 毎日 日本時間の深夜0時 (UTCの15:00) に実行
+    - cron: '0 15 * * *'
+  # GitHubの画面から手動で実行できるボタンを表示
+  workflow_dispatch:
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリのコードを取得
+        uses: actions/checkout@v4
+
+      - name: Python環境の準備
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 必要なパッケージのインストール
+        run: pip install requests
+
+      - name: 自動翻訳スクリプトの実行
+        env:
+          # --- 設定 ---
+          WEBLATE_URL: "https://hosted.weblate.org" # WeblateのURL
+          PROJECT_NAME: "3d-slicer"                 # プロジェクト名
+          COMPONENT_NAME: "slicerigt"               # コンポーネント名
+          MAX_UNITS: "100"                          # 1回の実行で翻訳する最大件数
+          DELAY_SECONDS: "1.0"                      # 待機時間
+          DRY_RUN: "false"                          # 本番実行
+          
+          # Secretsからキーを読み込む
+          WEBLATE_TOKEN: ${{ secrets.WEBLATE_TOKEN }}
+          TRANSLATOR_API_KEY: ${{ secrets.TRANSLATOR_API_KEY }}
+          
+        run: python auto_translator.py
